@@ -9,7 +9,10 @@
             "request": "launch",
             "name": "Debug: Main",
             "program": "${workspaceFolder}/decoder_debug",
-            "args": [],
+            "args": [
+                "test/example.mp3",
+                "test/output.pcm"
+            ],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build: Decoder Debug"
         }
