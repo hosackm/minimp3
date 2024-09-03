@@ -2,6 +2,14 @@
 
 This is an example mp3 decoder application that can be used to decode mp3 files into raw pcm. It is based on [minimp3](https://github.com/lieff/minimp3). The intent is to have this application serve as a baseline reference for writing an mp3 decoder in [zig](https://ziglang.org).
 
+## Dependencies
+
+This project relies on the [minimp3](https://github.com/lieff/minimp3) decoder. It is included as a header-only library as a git submodule that you can checkout with:
+
+```bash
+git submodule update --init --recursive
+```
+
 ## Build it
 
 A minimal `Makefile` is provided and can build the decoder in `debug` and `release` modes.
