@@ -1,3 +1,2 @@
-CompileFlags:
-    Add:
-        - "-Ivendor/minimp3"
+CompileCommands:
+    Directory: build

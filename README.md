@@ -12,14 +12,29 @@ git submodule update --init --recursive
 
 ## Build it
 
-A minimal `Makefile` is provided and can build the decoder in `debug` and `release` modes.
+`cmake` can be used to build the project. It will also generate `compile_commands.json` to be used by `clangd` if you have it installed.
+
+To build in release:
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+To build in debug:
+```bash
+cd build
+cmake -DCMAKE_BUILD_TYPE=debug ..
+cmake --build .
+```
 
 ## Run it
 
 In the test folder you'll find two example mp3s. These can be decoded with the application by running:
 
 ```bash
-./decoder test/example.mp3 test/output.pcm
+./mp3decode test/example.mp3 test/output.pcm
 ```
 
 In order to play the file you can use `ffplay`.
