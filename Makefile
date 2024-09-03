@@ -1,11 +1,14 @@
-SOURCES=main.c
+SOURCES=src/main.c
 CFLAGS=-Wall -Werror -fsanitize=address
 INCLUDES=-Ivendor/minimp3
 
-all: decoder
+all: release
 
-decoder: $(SOURCES)
-	clang $(CFLAGS) $(INCLUDES) $^ -o $@
+release: $(SOURCES)
+	clang $(CFLAGS) $(INCLUDES) -O3 $^ -o decoder
 
-decoder_debug: $(SOURCES)
-	clang $(CFLAGS) $(INCLUDES) -g $^ -o $@
+debug: $(SOURCES)
+	clang $(CFLAGS) $(INCLUDES) -g $^ -o decoder_debug
+
+clean:
+	@rm -rf ./decoder*
