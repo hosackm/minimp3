@@ -1,0 +1,18 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build: Decoder Debug",
+            "type": "shell",
+            "command": "make decoder_debug",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Generated task to build the decoder_debug target."
+        }
+    ]
+}
