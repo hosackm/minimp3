@@ -3,3 +3,9 @@ decoder_debug
 decoder_debug.dSYM
 .DS_Store
 
+zig-out
+zig-cache
+.zig-cache
+.cache
+
+build

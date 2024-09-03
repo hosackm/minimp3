@@ -45,8 +45,19 @@ error:
     return NULL;
 }
 
-int main(int argc, char **argv)
+int decode_main(const char *filename, const char *output_filename)
 {
+    if (!filename)
+    {
+        fprintf(stderr, "no input filename provided\n");
+        return 1;
+    }
+    if (!output_filename)
+    {
+        fprintf(stderr, "no output filename provided\n");
+        return 1;
+    }
+
     /* decoder context */
     mp3dec_t mp3d;
     mp3dec_frame_info_t info;
@@ -54,24 +65,8 @@ int main(int argc, char **argv)
 
     long filesize;
     unsigned int bytes_read = 0;
-    char *filename;
     unsigned char *input_buffer;
-    char *output_filename;
     FILE *output_file = NULL;
-
-    if (argc < 2)
-    {
-        fprintf(stderr, "Please provide a file to decode.\n");
-        return 1;
-    }
-    if (argc < 3)
-    {
-        fprintf(stderr, "Please provide a filename to write to.\n");
-        return 1;
-    }
-
-    filename = argv[1];
-    output_filename = argv[2];
 
     input_buffer = read_file(filename, &filesize);
     if (!input_buffer)
@@ -116,4 +111,24 @@ error:
     {
         fclose(output_file);
     }
+
+    return 1;
 }
+
+#ifndef USING_ZIG
+int main(int argc, char **argv)
+{
+    if (argc < 2)
+    {
+        fprintf(stderr, "Please provide a file to decode.\n");
+        return 1;
+    }
+    if (argc < 3)
+    {
+        fprintf(stderr, "Please provide a filename to write to.\n");
+        return 1;
+    }
+
+    return decode_main(argv[1], argv[2]);
+}
+#endif

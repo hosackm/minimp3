@@ -15,6 +15,17 @@
             ],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build: Decoder Debug"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug: Main Zig",
+            "program": "${workspaceFolder}/zig-out/bin/mp3decode",
+            "args": [
+                "test/example.mp3",
+                "test/output.pcm"
+            ],
+            "cwd": "${workspaceFolder}",
         }
     ]
 }
