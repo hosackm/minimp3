@@ -9,3 +9,5 @@ zig-cache
 .cache
 
 build
+
+test/*.pcm
