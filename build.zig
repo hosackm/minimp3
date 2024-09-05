@@ -4,6 +4,11 @@ const std = @import("std");
 // declaratively construct a build graph that will be executed by an external
 // runner.
 pub fn build(b: *std.Build) void {
+    // Create module
+    const minimp3_module = b.addModule("minimp3", .{ .root_source_file = b.path("minimp3/minimp3.zig") });
+    minimp3_module.addIncludePath(b.path("vendor/minimp3"));
+    minimp3_module.addCSourceFile(.{ .file = b.path("minimp3/minimp3_impl.c") });
+
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options
@@ -15,27 +20,24 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe = b.addExecutable(.{
+    const example = b.addExecutable(.{
         .name = "mp3decode",
-        .root_source_file = b.path("src/main.zig"),
+        .root_source_file = b.path("example/main.zig"),
         .target = target,
         .optimize = optimize,
     });
 
-    exe.addIncludePath(b.path("vendor/minimp3"));
-    exe.addCSourceFile(.{
-        .file = b.path("src/minimp3_impl.c"),
-    });
+    example.root_module.addImport("minimp3", minimp3_module);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
-    b.installArtifact(exe);
+    b.installArtifact(example);
 
     // This *creates* a Run step in the build graph, to be executed when another
     // step is evaluated that depends on it. The next line below will establish
     // such a dependency.
-    const run_cmd = b.addRunArtifact(exe);
+    const run_cmd = b.addRunArtifact(example);
 
     // By making the run step depend on the install step, it will be run from the
     // installation directory rather than directly from within the cache directory.

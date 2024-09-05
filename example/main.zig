@@ -1,5 +1,5 @@
 const std = @import("std");
-const mp3 = @import("minimp3.zig");
+const mp3 = @import("minimp3");
 
 const usage: []const u8 = "Usage: {s} <input> <output>\n";
 
@@ -34,5 +34,5 @@ pub fn main() !void {
         i += frame.info.frame_bytes;
     }
 
-    std.debug.print("Wrote {d} samples\n", .{num_samples});
+    std.debug.print("Wrote {d} samples to {s}\n", .{ num_samples, args[2] });
 }
