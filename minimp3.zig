@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const mp3 = @import("wrap.zig");
+const mp3 = @import("minimp3/wrap.zig");
 const MiniMp3Decoder = mp3.MiniMp3Decoder;
 const MiniMp3FrameInfo = mp3.MiniMp3FrameInfo;
 

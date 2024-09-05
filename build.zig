@@ -5,7 +5,7 @@ const std = @import("std");
 // runner.
 pub fn build(b: *std.Build) void {
     // Create module
-    const minimp3_module = b.addModule("minimp3", .{ .root_source_file = b.path("minimp3/minimp3.zig") });
+    const minimp3_module = b.addModule("minimp3", .{ .root_source_file = b.path("minimp3.zig") });
     minimp3_module.addIncludePath(b.path("vendor/minimp3"));
     minimp3_module.addCSourceFile(.{ .file = b.path("minimp3/minimp3_impl.c") });
 
