@@ -1,7 +1,7 @@
 const std = @import("std");
-const mp3 = @import("root.zig");
+const mp3 = @import("minimp3.zig");
 
-const usage: []const u8 = "Usage: ./mp3decode <input> <output>";
+const usage: []const u8 = "Usage: {s} <input> <output>\n";
 
 pub fn main() !void {
     const alloc = std.heap.page_allocator;
@@ -9,19 +9,19 @@ pub fn main() !void {
     defer std.process.argsFree(alloc, args);
 
     if (args.len < 3) {
-        std.debug.print("{s}\n", .{usage});
+        std.debug.print(usage, .{std.fs.path.basename(args[0])});
         return;
     }
 
     const f = try std.fs.cwd().openFile(args[1], .{ .mode = .read_only });
     defer f.close();
 
-    const bytes = try f.readToEndAlloc(alloc, 1000000000);
-
     const output_file = try std.fs.cwd().createFile(args[2], .{});
     defer output_file.close();
 
-    var decoder = mp3.Decoder{};
+    const bytes = try f.readToEndAlloc(alloc, 1000000000);
+
+    var decoder: mp3.Decoder = undefined;
     decoder.init();
 
     var i: usize = 0;

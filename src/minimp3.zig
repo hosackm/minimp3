@@ -1,28 +1,24 @@
 const std = @import("std");
-const t = @import("types.zig");
+
+const mp3 = @import("wrap.zig");
+const MiniMp3Decoder = mp3.MiniMp3Decoder;
+const MiniMp3FrameInfo = mp3.MiniMp3FrameInfo;
 
 pub const Decoder = struct {
-    instance: t.mp3dec_t = undefined,
-    ptr: [*c]t.mp3dec_t = undefined,
+    instance: MiniMp3Decoder = undefined,
 
     const Self = @This();
-
-    const max_samples = 1152;
-    const max_channels = 2;
-    var pcm: [max_samples * max_channels]t.mp3d_sample_t = undefined;
-    var pcm_bytes: [*]const u8 = @ptrCast(pcm[0..]);
+    var pcm: [mp3.max_sample_per_frame]i16 = undefined;
+    var info: MiniMp3FrameInfo = undefined;
 
     pub fn init(self: *Self) void {
-        self.ptr = @constCast(@ptrCast(&self.instance));
-        mp3dec_init(self.ptr);
+        mp3.mp3dec_init(&self.instance);
     }
 
-    // Add bytes to decdoer and return a DecodeResult
+    // Add bytes to decoder and return a DecodeResult
     pub fn decode(self: *Self, bytes: []const u8) DecodeResult {
-        var info: t.mp3dec_frame_info_t = undefined;
-
-        const num_frames = mp3dec_decode_frame(
-            self.ptr,
+        const num_frames = mp3.mp3dec_decode_frame(
+            &self.instance,
             @constCast(@ptrCast(bytes.ptr)),
             @intCast(bytes.len),
             &pcm,
@@ -30,19 +26,21 @@ pub const Decoder = struct {
         );
 
         return .{
-            .output = prepareBuffer(info, num_frames),
+            .output = prepareBuffer(num_frames),
             .info = FrameInfo.convert(info),
         };
     }
 
     // Get a buffer to return to the user
-    fn prepareBuffer(info: t.mp3dec_frame_info_t, n: c_int) SampleBuffer {
+    fn prepareBuffer(n: c_int) SampleBuffer {
         const num_samples: usize = @intCast(n * info.channels);
-        const num_bytes: usize = @intCast(num_samples * @sizeOf(i16));
-        const pcm_bytes_slice: []const u8 = pcm_bytes[0..num_bytes];
+        const num_bytes: usize = @intCast(n * info.channels * @sizeOf(i16));
         return .{
             .samples = pcm[0..num_samples],
-            .bytes = pcm_bytes_slice,
+            .bytes = @as(
+                [*]const u8,
+                @ptrCast(pcm[0..]),
+            )[0..num_bytes],
             .channels = @intCast(info.channels),
         };
     }
@@ -55,7 +53,7 @@ pub const DecodeResult = struct {
     info: FrameInfo,
 };
 
-// SampleBuffer gives us access to samples
+// SampleBuffer is returned to the user
 pub const SampleBuffer = struct {
     samples: []i16 = undefined,
     bytes: []const u8 = undefined,
@@ -71,10 +69,8 @@ pub const FrameInfo = struct {
     layer: u4,
     bitrate: u32,
 
-    const Self = @This();
-
     // Converts c type to zig type
-    pub fn convert(old: t.mp3dec_frame_info_t) Self {
+    pub fn convert(old: MiniMp3FrameInfo) FrameInfo {
         return .{
             .frame_bytes = @intCast(old.frame_bytes),
             .frame_offset = @intCast(old.frame_offset),
@@ -85,12 +81,3 @@ pub const FrameInfo = struct {
         };
     }
 };
-
-pub extern "c" fn mp3dec_init(dec: [*c]t.mp3dec_t) void;
-pub extern "c" fn mp3dec_decode_frame(
-    dec: [*c]t.mp3dec_t,
-    mp3: [*c]const u8,
-    mp3_bytes: c_int,
-    pcm: [*c]t.mp3d_sample_t,
-    info: [*c]t.mp3dec_frame_info_t,
-) c_int;
