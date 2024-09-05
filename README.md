@@ -1,32 +1,39 @@
-# mp3decoder
+# minimp3
 
-This is an example mp3 decoder application that can be used to decode mp3 files into raw pcm. It is based on [minimp3](https://github.com/lieff/minimp3).
+[zig](https://ziglang.org) bindings for [minimp3](https://github.com/lieff/minimp3).
 
 > **NOTE:** This project is based on [zig](https://ziglang.org/documentation/0.13.0/) version 0.13.0. Other versions of zig are not guaranteed to work and may require modifications.
 
-## Dependencies
+## Install it
 
-This project relies on the [minimp3](https://github.com/lieff/minimp3) decoder. It is included as a header-only library as a git submodule that you can checkout with:
-
-```bash
-git submodule update --init --recursive
-```
-
-## Build it
-
-If you have `zig` installed you can run:
+First, run:
 
 ```bash
-zig build
+zig fetch --save git+https://github.com/hosackm/minimp3
 ```
 
-## Run it
+Next, update your `build.zig`:
+
+```zig
+const minimp3 = b.dependency("minimp3", .{});
+exe.root_module.addImport("minimp3", minimp3.module("minimp3"));
+```
+
+## Example
+
+There is an example provided in `example/main.zig` for reading from an mp3 and writing to a raw pcm file.
+
+You can copy this code directly into your `src/main.zig`.
+
+### Run the example
 
 In the test folder you'll find two example mp3s. These can be decoded with the application by running:
 
 ```bash
 zig build run -- test/example.mp3 test/output.pcm
 ```
+
+### Test the example
 
 In order to play the file you can use `ffplay`.
 

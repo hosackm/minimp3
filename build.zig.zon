@@ -1,5 +1,5 @@
 .{
     .name = "minimp3",
     .version = "0.0.1",
-    .path = .{"."},
+    .paths = .{"."},
 }
