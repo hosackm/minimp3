@@ -1,5 +1,5 @@
 const std = @import("std");
-const mp3 = @import("minimp3");
+const Decoder = @import("decoder");
 
 const usage: []const u8 = "Usage: {s} <input> <output>\n";
 
@@ -21,15 +21,14 @@ pub fn main() !void {
 
     const bytes = try f.readToEndAlloc(alloc, 1000000000);
 
-    var decoder: mp3.Decoder = undefined;
-    decoder.init();
+    var decoder: Decoder = undefined;
 
     var i: usize = 0;
     var num_samples: usize = 0;
     while (i < bytes.len) {
         const frame = decoder.decode(bytes[i..]);
         if (frame.output) |buffer| {
-            num_samples += try output_file.write(buffer.bytes);
+            num_samples += try output_file.write(buffer.bytes) / @sizeOf(i16);
         }
         i += frame.info.frame_bytes;
     }
