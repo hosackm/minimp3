@@ -7,6 +7,6 @@ zig-cache
 .zig-cache
 .cache
 build
-test/*.pcm
+example/*.pcm
 .vscode
 
