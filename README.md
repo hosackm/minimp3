@@ -21,23 +21,23 @@ exe.root_module.addImport("minimp3", minimp3.module("minimp3"));
 
 ## Example
 
-There is an example provided in the `example` directory.
+There's an example in the `example` directory. It shows you how you can decode an mp3 to PCM and access some information about each of the frames within it.
 
 You can copy this code directly into your `src/main.zig`.
 
 ### Run the example
 
-An `example.mp3` is provided in the example directory. You can decode it using:
+An `example.mp3` is provided in the example directory.
 
 ```bash
-zig build run -- example.mp3 output.pcm
+zig build run -- example/example.mp3 output.pcm
 ```
 
 ### Test the example
 
 The example writes an audio file as raw pcm. Use `ffplay` to play it:
 
-> **Note**: _At the time of writing the current major version of `ffmpeg` is 7. The options I'm providing may not work for your version of `ffplay`._
+> **Note**: _At the time of writing the current version of `ffmpeg` is 7.1.4. The options I'm providing may not work for your version of `ffplay`._
 
 ```bash
 ffplay -f s16le -ch_layout stereo -sample_rate 44100 output.pcm
