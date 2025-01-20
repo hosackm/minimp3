@@ -8,30 +8,28 @@ pub fn main() !void {
     const args = try std.process.argsAlloc(alloc);
     defer std.process.argsFree(alloc, args);
 
-    if (args.len < 3) {
-        std.debug.print(usage, .{std.fs.path.basename(args[0])});
-        return;
-    }
+    const input_file = try std.fs.cwd().openFile(
+        args[1],
+        .{ .mode = .read_only },
+    );
+    defer input_file.close();
 
-    const f = try std.fs.cwd().openFile(args[1], .{ .mode = .read_only });
-    defer f.close();
-
-    const output_file = try std.fs.cwd().createFile(args[2], .{});
+    const output_file = try std.fs.cwd().createFile(
+        args[2],
+        .{},
+    );
     defer output_file.close();
 
-    const bytes = try f.readToEndAlloc(alloc, 1000000000);
+    var buffer: [4096]u8 = undefined;
+    var falloc = std.heap.FixedBufferAllocator.init(&buffer);
+    var sd = try Decoder.Decoder.init(falloc.allocator());
 
-    var decoder: Decoder = undefined;
-
-    var i: usize = 0;
-    var num_samples: usize = 0;
-    while (i < bytes.len) {
-        const frame = decoder.decode(bytes[i..]);
-        if (frame.output) |buffer| {
-            num_samples += try output_file.write(buffer.bytes) / @sizeOf(i16);
-        }
-        i += frame.info.frame_bytes;
+    defer sd.deinit(falloc.allocator());
+    while (try sd.nextFrame(input_file.reader())) |frame| {
+        _ = try output_file.write(std.mem.sliceAsBytes(frame.samples));
+        std.debug.print(
+            "Wrote {d} bytes to {d} samples.\n",
+            .{ frame.info.frame_bytes, frame.samples.len },
+        );
     }
-
-    std.debug.print("Wrote {d} samples to {s}\n", .{ num_samples, args[2] });
 }

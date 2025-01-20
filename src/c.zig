@@ -1,8 +1,6 @@
-const c = struct {
-    usingnamespace @cImport({
-        @cInclude("minimp3.h");
-    });
-};
+const c = @cImport({
+    @cInclude("minimp3.h");
+});
 
 pub const max_samples_per_frame = c.MINIMP3_MAX_SAMPLES_PER_FRAME;
 pub const info = c.mp3dec_frame_info_t;

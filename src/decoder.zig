@@ -1,56 +1,5 @@
+const std = @import("std");
 const c = @import("c.zig");
-const Self = @This();
-
-ptr: c.decoder = null,
-ready: bool = false,
-
-// Store pcm and info from last decoded frame
-var pcm: [c.max_samples_per_frame]i16 = undefined;
-var info: c.info = undefined;
-
-inline fn init(self: *Self) void {
-    self.ready = true;
-    c.init(&self.ptr);
-}
-
-// Add bytes to decoder and return a Result
-pub fn decode(self: *Self, b: []const u8) Result {
-    if (!self.ready) self.init();
-    const num_frames = c.decode(&self.ptr, b.ptr, @intCast(b.len), &pcm, &info);
-
-    return .{
-        .output = prepareBuffer(num_frames),
-        .info = Info.convert(info),
-    };
-}
-
-// Get a buffer to return to the user
-fn prepareBuffer(n: c_int) SampleBuffer {
-    const num_samples: usize = @intCast(n * info.channels);
-    const num_bytes: usize = @intCast(n * info.channels * @sizeOf(i16));
-    return .{
-        .samples = pcm[0..num_samples],
-        .bytes = @as(
-            [*]const u8,
-            @ptrCast(pcm[0..]),
-        )[0..num_bytes],
-        .channels = @intCast(info.channels),
-    };
-}
-
-// Result contains the information about the frame decoded
-// as well as an output sample buffer if one was provided
-pub const Result = struct {
-    output: ?SampleBuffer,
-    info: Info,
-};
-
-// SampleBuffer is returned to the user
-pub const SampleBuffer = struct {
-    samples: []i16 = undefined,
-    bytes: []const u8 = undefined,
-    channels: usize = undefined,
-};
 
 // Encapsulates the info about the decoded frame
 pub const Info = struct {
@@ -70,6 +19,65 @@ pub const Info = struct {
             .hz = @intCast(old.hz),
             .layer = @intCast(old.layer),
             .bitrate = @intCast(old.bitrate_kbps),
+        };
+    }
+};
+
+pub const Result = struct {
+    samples: []i16,
+    info: Info,
+};
+
+pub const Decoder = struct {
+    pcm: [c.max_samples_per_frame]i16,
+    input_buffer: []u8,
+    num_bytes: usize,
+    ptr: c.decoder,
+
+    pub fn init(alloc: std.mem.Allocator) !Decoder {
+        var sd: Decoder = .{
+            .pcm = undefined,
+            .input_buffer = try alloc.alloc(u8, 2048),
+            .num_bytes = 0,
+            .ptr = undefined,
+        };
+        c.init(&sd.ptr);
+        return sd;
+    }
+
+    pub fn deinit(self: *Decoder, alloc: std.mem.Allocator) void {
+        alloc.free(self.input_buffer);
+    }
+
+    pub fn nextFrame(self: *Decoder, rdr: anytype) !?Result {
+        const n = try rdr.read(self.input_buffer[self.num_bytes..]);
+        self.num_bytes += n;
+
+        var local_info: c.info = undefined;
+        const num_frames = c.decode(
+            &self.ptr,
+            self.input_buffer.ptr,
+            @intCast(self.num_bytes),
+            &self.pcm,
+            &local_info,
+        );
+        if (num_frames == 0) {
+            return null;
+        }
+
+        // move the buffer to front
+        const bytes_consumed: usize = @intCast(local_info.frame_bytes);
+        std.mem.copyForwards(
+            u8,
+            self.input_buffer,
+            self.input_buffer[bytes_consumed..],
+        );
+        self.num_bytes -= bytes_consumed;
+
+        const num_samples: usize = @intCast(num_frames * local_info.channels);
+        return .{
+            .samples = self.pcm[0..num_samples],
+            .info = Info.convert(local_info),
         };
     }
 };
