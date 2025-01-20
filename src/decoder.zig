@@ -3,10 +3,10 @@
 const std = @import("std");
 const c = @import("c.zig");
 
+pub const Decoder = @This();
+
 const max_samples = c.max_samples_per_frame;
 const max_frame_size = 1411;
-
-pub const Decoder = @This();
 
 output: [max_samples]i16,
 input: [max_frame_size * 2]u8,
@@ -25,12 +25,12 @@ pub fn init() Decoder {
     return dec;
 }
 
-/// Reads bytes from rdr into an internal buffer until able to decode
+/// Reads bytes from the reader into an internal buffer until able to decode
 /// a frame. If no frame is returned, then the caller has reached the
 /// end of the MP3 stream.
-pub fn nextFrame(self: *Decoder, rdr: anytype) !?Frame {
+pub fn nextFrame(self: *Decoder, reader: anytype) !?Frame {
     // Read until the input buffer is full or EOF.
-    self.available += try rdr.read(self.input[self.available..]);
+    self.available += try reader.read(self.input[self.available..]);
 
     var info: c.Info = undefined;
     const num_frames = c.decode(
@@ -45,7 +45,7 @@ pub fn nextFrame(self: *Decoder, rdr: anytype) !?Frame {
     }
 
     // Remove the bytes consumed by the decoder.
-    self.removeBytes(@intCast(info.frame_bytes));
+    try self.realign(@intCast(info.frame_bytes));
 
     return .{
         .samples = self.output[0..@intCast(num_frames * info.channels)],
@@ -60,14 +60,11 @@ pub fn nextFrame(self: *Decoder, rdr: anytype) !?Frame {
     };
 }
 
-/// Removes n bytes from the head of the input buffer after they've been consumed
-/// by the decoder.
-fn removeBytes(self: *Decoder, n: usize) void {
-    std.mem.copyForwards(
-        u8,
-        &self.input,
-        self.input[n..],
-    );
+/// Skip over n bytes and then moves the remaining unconsumed
+/// bytes to the head of the input buffer.
+fn realign(self: *Decoder, n: usize) error{Underflow}!void {
+    if (n > self.available) return error.Underflow;
+    std.mem.copyForwards(u8, &self.input, self.input[n..]);
     self.available -= n;
 }
 
@@ -86,6 +83,21 @@ const Frame = struct {
     samples: []i16,
     info: Info,
 };
+
+test "realign bytes" {
+    const s: []const u8 = "1234567890";
+    var dec: Decoder = .{
+        .output = undefined,
+        .input = undefined,
+        .available = s.len,
+        .instance = undefined,
+    };
+    @memcpy(dec.input[0..s.len], s);
+
+    try std.testing.expect(std.mem.eql(u8, dec.input[0..s.len], s));
+    try dec.realign(5);
+    try std.testing.expect(std.mem.eql(u8, dec.input[0..5], s[5..]));
+}
 
 test "decode single frame" {
     // single frame from example.mp3, 44.1 kHz, 2 channels, 128 kbps (first frame)

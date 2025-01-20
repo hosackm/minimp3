@@ -21,15 +21,15 @@ pub fn main() !void {
 
     const input_file = try std.fs.cwd().openFile(args[1], .{});
     defer input_file.close();
+    const rdr = input_file.reader();
 
     const output_file = try std.fs.cwd().createFile(args[2], .{});
     defer output_file.close();
 
-    var sd = Decoder.init();
-
+    var dec = Decoder.init();
     var total_frames: usize = 0;
     var bitrate_acc: usize = 0;
-    while (try sd.nextFrame(input_file.reader())) |frame| : (total_frames += 1) {
+    while (try dec.nextFrame(rdr)) |frame| : (total_frames += 1) {
         _ = try output_file.write(std.mem.sliceAsBytes(frame.samples));
         bitrate_acc += frame.info.bitrate;
 
