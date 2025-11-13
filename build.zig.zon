@@ -1,5 +1,6 @@
 .{
-    .name = "minimp3",
+    .name = .minimp3,
     .version = "0.0.1",
     .paths = .{"."},
+    .fingerprint = 0xe83a9dff355b798c,
 }

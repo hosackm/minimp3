@@ -2,7 +2,7 @@
 
 [zig](https://ziglang.org) bindings for [minimp3](https://github.com/lieff/minimp3).
 
-> **NOTE:** This project is based on [zig](https://ziglang.org/documentation/0.13.0/) version 0.13.0. Other versions of zig are not guaranteed to work and may require modifications.
+> **NOTE:** This project is based on [zig](https://ziglang.org/documentation/0.15.1/) version 0.15.1. Other versions of zig are not guaranteed to work and may require modifications.
 
 ## Install it
 
