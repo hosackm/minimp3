@@ -6,7 +6,7 @@ pub fn main() !void {
     const args = try std.process.argsAlloc(alloc);
     defer std.process.argsFree(alloc, args);
 
-    const stdout = std.io.getStdOut();
+    const stdout = std.fs.File.stdout();
     var output_buffer: [256]u8 = undefined;
 
     if (args.len < 3) {
@@ -21,7 +21,8 @@ pub fn main() !void {
 
     const input_file = try std.fs.cwd().openFile(args[1], .{});
     defer input_file.close();
-    const rdr = input_file.reader();
+    var read_buf: [8 * 1024]u8 = undefined;
+    var rdr = input_file.reader(&read_buf);
 
     const output_file = try std.fs.cwd().createFile(args[2], .{});
     defer output_file.close();
@@ -29,7 +30,7 @@ pub fn main() !void {
     var dec = Decoder.init();
     var total_frames: usize = 0;
     var bitrate_acc: usize = 0;
-    while (try dec.nextFrame(rdr)) |frame| : (total_frames += 1) {
+    while (try dec.nextFrame(&rdr)) |frame| : (total_frames += 1) {
         _ = try output_file.write(std.mem.sliceAsBytes(frame.samples));
         bitrate_acc += frame.info.bitrate;
 

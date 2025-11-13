@@ -30,7 +30,18 @@ pub fn init() Decoder {
 /// end of the MP3 stream.
 pub fn nextFrame(self: *Decoder, reader: anytype) !?Frame {
     // Read until the input buffer is full or EOF.
-    self.available += try reader.read(self.input[self.available..]);
+    const n = reader.read(self.input[self.available..]) catch |err| switch (err) {
+        error.EndOfStream => 0,
+        else => return err,
+    };
+
+    if (n == 0) {
+        // nothing more to read
+        return null;
+    }
+
+    // read some data
+    self.available += n;
 
     var info: c.Info = undefined;
     const num_frames = c.decode(
